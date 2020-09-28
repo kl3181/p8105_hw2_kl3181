@@ -10,7 +10,7 @@ library(readxl)
 ```
 
 ## Problem 1
-Read in Mr. Trashweel data set.
+Read in Mr. Trashweel data set and clean.
 ```{r}
 trashwheel_df = read_xlsx(
   "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
@@ -62,6 +62,48 @@ precip_df =
   left_join(precip_df, month_df, by = "month")
 ```
 
-This dataset contains information from the Mr.Trashweel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashweel collects that trash, and then stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. There are variables including `r colnames(trashwheel_df)` and has data from `r min(pull(trashwheel_df, year))` to `r max(pull(trashwheel_df, year))`. The median number of sports balls in 2017 was `r median(pull(filter(trashwheel_df, year == 2017), sports_balls))`. The total precipitation in 2017 was `r sum(pull(filter(precip_df, year == 2017), total))` inches. In 2018, it was `r sum(pull(filter(precip_df, year == 2018), total))` inches.
+This dataset contains information from the Mr.Trashweel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashweel collects that trash, and then stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. There are variables including `r colnames(trashwheel_df)` and has data from `r min(pull(trashwheel_df, year))` to `r max(pull(trashwheel_df, year))`. The median number of sports balls in 2017 was `r trashwheel_df %>% filter(year == 2017) %>% pull(sports_balls) %>% median()`. The total precipitation in 2017 was `r precip_df %>% filter(year == 2017) %>% pull(total) %>% sum()` inches. In 2018, it was `r precip_df %>% filter(year == 2018) %>% pull(total) %>% sum()` inches.
 
+## Problem 2
+#####Read in NYC transit dataset and clean.
+```{r}
+transit_df =  read_csv("./data/NYC_Transit_Subway_Entrance_And_Exit_Data.csv") %>%
+    janitor::clean_names() %>%
+    select(line, station_name, station_latitude, station_longitude, route1:route11, entry, entrance_type, vending, ada) %>% 
+    mutate(
+      entry = recode(entry, "YES" = "TRUE", "NO" = "FALSE"
+    ), 
+)
+```
+This dataset focuses on NYC transit data, with information related to each entrance and exit for each subway station in NYC. After cleaning the dataset, the dataset contains variables `r colnames(transit_df)`. The clean_names function was utilized in the janitor package. The entry variable was changed from character to logical. Additionally, there are a total of `r nrow(transit_df)` rows and `r ncol(transit_df)` columns. The data is not tidy because the route number and route name are not distinct variables.
+
+##### Data Related Questions
+```{r}
+distinct_stations = distinct(transit_df, line, station_name, .keep_all = TRUE)
+ada_compliant = nrow(filter(distinct_stations, ada == TRUE))
+no_vending = transit_df %>% 
+  filter(vending == "NO") 
+prop = round(nrow(filter(no_vending, entry == TRUE)) / nrow(no_vending), 3)
+```
+
+There are `r nrow(distinct_stations)` distinct stations, `r ada_compliant` stations are ADA compliant and `r prop*100` percent of entrances/exits without vending allow entrance.
+
+##### Reformat data
+```{r}
+transit_reformat = transit_df %>% 
+  mutate_at(vars(route8:route11), as.character) %>% 
+  pivot_longer(
+    route1:route11, 
+    names_to = "route_num", 
+    values_to = "route_name") %>% 
+  drop_na(route_name)
+
+A_train = transit_reformat %>% 
+  filter(route_name == "A") %>% 
+  distinct(line, station_name, .keep_all = TRUE)
+
+ADA_A = A_train %>% 
+  filter(ada == TRUE)
+```
+There are `r nrow(A_train)` distinct stations serving the A train. Among these stations, `r nrow(ADA_A)` are ADA compliant.
 
