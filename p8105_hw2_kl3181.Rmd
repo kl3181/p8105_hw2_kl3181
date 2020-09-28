@@ -11,7 +11,7 @@ library(readxl)
 
 ## Problem 1
 Read in Mr. Trashweel data set.
-```{r import_trashwheel}
+```{r}
 trashwheel_df = read_xlsx(
   "./data/Trash-Wheel-Collection-Totals-8-6-19.xlsx",
       sheet = "Mr. Trash Wheel",
@@ -46,5 +46,22 @@ precip_2017 = read_excel(
   mutate(year = 2017) %>%
   relocate(year)
 ```
+
+Now combine annual precipitation dataframes. This can be done with a "helper" tibble that contains pairs of numeric and character ways of representing month, and then merge with precipitation dataset. 
+```{r}
+month_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name
+  )
+
+precip_df = 
+  bind_rows(precip_2018, precip_2017)
+
+precip_df = 
+  left_join(precip_df, month_df, by = "month")
+```
+
+This dataset contains information from the Mr.Trashweel trash collector in Baltimore, Maryland. As trash enters the inner harbor, the trashweel collects that trash, and then stores it in a dumpster. The dataset contains information on year, month, and trash collected, including some specific kinds of trash. There are a total of `r nrow(trashwheel_df)` rows in our final dataset. Additional data sheets include month precipitation data. There are variables including `r colnames(trashwheel_df)` and has data from `r min(pull(trashwheel_df, year))` to `r max(pull(trashwheel_df, year))`. The median number of sports balls in 2017 was `r median(pull(filter(trashwheel_df, year == 2017), sports_balls))`. The total precipitation in 2017 was `r sum(pull(filter(precip_df, year == 2017), total))` inches. In 2018, it was `r sum(pull(filter(precip_df, year == 2018), total))` inches.
 
 
