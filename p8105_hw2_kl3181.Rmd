@@ -120,7 +120,7 @@ pols_tidy_df = left_join(pols_month_df, month_pols, by = "month") %>%
   relocate(month_name) %>%
   mutate(
     president = recode(prez_dem,`1` = "dem", `0` = "gop")) %>%
-  select(-month, -prez_dem, -prez_gop, -day)
+  select(-month, -prez_dem, -prez_gop, -day) 
 ```
 
 Reading in and cleaning snp data.
@@ -139,7 +139,7 @@ month_snp =
 snp_tidy_df = left_join(snp_df, month_snp, by = "month") %>%
   arrange(year, month) %>%
   relocate(year, month_name) %>%
-  select(-month, -day)
+  select(-month, -day) 
 ```
 
 Reading in and cleaning unemployment data.
@@ -154,7 +154,7 @@ unemployment_df = read_csv(
     values_to = "unemployment"
   ) %>% 
   mutate(
-    year = as.character(year))
+    year = as.character(year)) 
 ```
 
 Join the datasets.
@@ -163,5 +163,12 @@ First, merge snp into pols. Then, merge in unemployment.
 snp_pols_df = left_join(pols_tidy_df, snp_tidy_df, by = c("year" = "year", "month_name" = "month_name"))
 
 final_df = left_join(snp_pols_df, unemployment_df, by = c("year" = "year", "month_name" = "month_name"))
-```
+``` 
 
+The initial pols dataset contains 822 observations of 9 variables related to the number of national politicians who are democratic or republican at any time as well as the date and indication of whether the president was democratic or republican. To tidy the resulting dataset, I separated the date into three new variables: month, year and day and then removing day in order to merge with the other datasets. Then, I converted the months into the full names and created a new president variable, allowing us to see the party of the president easier. The tidied dataset also has 822 rows and 9 columns, with a date range from 1947-2015. 
+
+The initial snp dataset contains 787 observations of 2 variables (date and close) related to the S&P, which is often used as a representative measure of the stock market as a whole. To tidy the dataset, I separated the date into month, year and day, removing day. Then, the full month name was appied to keep consistency. The tidied dataset has 787 rows and 3 columns, with a date range from 1950-2015. 
+
+The initial unemployment dataset contains 68 observations of 13 variables, with each variable indicating the percentage of unemployment for each month as well as the year. To tidy the data and allow for future merging, I transformed the months from columns into rows and then changed the months to allow for consistency. The tidied dataset has 816 rows and 3 variables (year, month and unemployment) with a date range from 1948-2015.
+
+The final dataset merges all three of the other datasets: pols, snp, and unemployment by year and month. This larger dataset contains 822 rows of data and 11 columns. These variables provide information on politics, the stock market as well as unemployment for different time periods ranging from 1947-2015. 
